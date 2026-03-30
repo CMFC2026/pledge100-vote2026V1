@@ -215,42 +215,57 @@ reader.readAsDataURL(file);
 // 🎫 Badge
 function generateBadge(file){
 
-let canvas = document.getElementById("canvas");
-let ctx = canvas.getContext("2d");
+    let canvas = document.getElementById("canvas");
+    let ctx = canvas.getContext("2d");
 
-let bg = new Image();
-let user = new Image();
-let qr = new Image();
+    let bg = new Image();
+    let user = new Image();
+    let qr = new Image();
 
-bg.src="https://pledgeelection2026v1.netlify.app/badge.png";
-user.src=URL.createObjectURL(file);
-qr.src="https://pledgeelection2026v1.netlify.app/qr.png";
+    bg.src="https://github.com/CMFC2026/pledge100-vote2026V1/blob/main/images/badge.png";
+    user.src=URL.createObjectURL(file);
+    qr.src="https://github.com/CMFC2026/pledge100-vote2026V1/blob/main/images/qr.png";
 
-Promise.all([
-new Promise(r=>bg.onload=r),
-new Promise(r=>user.onload=r),
-new Promise(r=>qr.onload=r)
-]).then(()=>{
+    Promise.all([
+        new Promise(r=>bg.onload=r),
+        new Promise(r=>user.onload=r),
+        new Promise(r=>qr.onload=r)
+    ]).then(()=>{
 
-ctx.drawImage(bg,0,0,400,400);
+        // 🔹 Resize canvas to match badge image
+        canvas.width = bg.width;
+        canvas.height = bg.height;
 
-ctx.save();
-ctx.beginPath();
-ctx.arc(200,200,65,0,Math.PI*2);
-ctx.clip();
-ctx.drawImage(user,135,135,130,130);
-ctx.restore();
+        // 🔹 Draw badge background
+        ctx.drawImage(bg,0,0,canvas.width,canvas.height);
 
-ctx.textAlign="center";
-ctx.fillText(name.value,200,300);
-ctx.fillText(constituency.value,200,320);
-ctx.fillText("Ramanathapuram District",200,340);
+        // 🔹 Draw circular profile photo
+        let centerX = canvas.width/2;
+        let centerY = canvas.height/2 - 20; // adjust vertical as needed
+        let radius = 65;
 
-ctx.drawImage(qr,290,290,90,90);
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, Math.PI*2);
+        ctx.clip();
+        ctx.drawImage(user, centerX-radius, centerY-radius, radius*2, radius*2);
+        ctx.restore();
 
-downloadPDF(canvas);
+        // 🔹 Draw text
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#000"; // black text
+        ctx.font = "16px Arial"; // adjust size as needed
+        ctx.fillText(name.value, centerX, centerY + radius + 30);
+        ctx.fillText(constituency.value, centerX, centerY + radius + 50);
+        ctx.fillText("Ramanathapuram District", centerX, centerY + radius + 70);
 
-});
+        // 🔹 Draw QR code
+        ctx.drawImage(qr, canvas.width-110, canvas.height-110, 90, 90);
+
+        // 🔹 Download PDF
+        downloadPDF(canvas);
+
+    });
 
 }
 
