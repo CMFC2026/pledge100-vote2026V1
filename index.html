@@ -12,15 +12,12 @@ body {font-family: Arial; background:#f5f7fb;}
 .card {background:white; padding:20px; border-radius:12px;}
 .grid {display:grid; grid-template-columns:1fr 1fr; gap:10px;}
 input, select {padding:10px; border-radius:8px; border:1px solid #ccc; width:100%;}
-button {padding:10px; border:none; border-radius:8px; cursor:pointer; margin:2px;}
+button {padding:10px; border:none; border-radius:8px; cursor:pointer; margin:5px;}
 .submit {background:#2ecc71; color:white; width:100%;}
+.download {background:#3498db; color:white;}
 .photo-box {border:1px dashed #ccc; padding:15px; border-radius:10px; text-align:center;}
-.btn-upload {background:#eee;}
-.btn-camera {background:#d4f5d4;}
-#preview {margin-top:10px; width:100px; height:100px; border-radius:50%; object-fit:cover;}
-.lang-btn {background:#ddd;}
+#preview {margin-top:10px; width:100px; height:100px; border-radius:50%;}
 </style>
-
 </head>
 
 <body>
@@ -28,8 +25,8 @@ button {padding:10px; border:none; border-radius:8px; cursor:pointer; margin:2px
 <div class="container">
 
 <div style="text-align:right;">
-<button class="lang-btn" onclick="setLanguage('ta')">தமிழ்</button>
-<button class="lang-btn" onclick="setLanguage('en')">English</button>
+<button onclick="setLanguage('ta')">தமிழ்</button>
+<button onclick="setLanguage('en')">English</button>
 </div>
 
 <h2 id="title">100% வாக்களிப்பு உறுதி</h2>
@@ -41,7 +38,7 @@ button {padding:10px; border:none; border-radius:8px; cursor:pointer; margin:2px
 <div>
 <label id="lblDistrict">மாவட்டம்</label>
 <select id="district">
-<option value="Ramanathapuram">Ramanathapuram</option>
+<option>Ramanathapuram</option>
 </select>
 </div>
 
@@ -57,12 +54,12 @@ button {padding:10px; border:none; border-radius:8px; cursor:pointer; margin:2px
 
 <div>
 <label id="lblName">பெயர்</label>
-<input type="text" id="name" required>
+<input type="text" id="name">
 </div>
 
 <div>
-<label id="lblPhone">தொலைபேசி எண்</label>
-<input type="tel" id="phone" maxlength="10" required>
+<label id="lblPhone">தொலைபேசி</label>
+<input type="tel" id="phone" maxlength="10">
 </div>
 
 </div>
@@ -70,176 +67,122 @@ button {padding:10px; border:none; border-radius:8px; cursor:pointer; margin:2px
 <br>
 
 <div class="photo-box">
-<p id="photoText">புகைப்படத்தை தேர்வு செய்யவும்</p>
-
-<input type="file" id="uploadInput" accept="image/*" style="display:none">
-<input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none">
-
-<button class="btn-upload" onclick="uploadInput.click()">Upload File</button>
-<button class="btn-camera" onclick="cameraInput.click()">Take Photo</button>
-
-<br>
+<input type="file" id="file" accept="image/*">
 <img id="preview">
 </div>
 
 <br>
 
-<button class="submit" onclick="submitForm()">Badge உருவாக்க</button>
+<button class="submit" onclick="submitForm()">Generate Badge</button>
+<button class="download" onclick="downloadImage()">Download Image</button>
 
 </div>
 </div>
 
 <canvas id="canvas" width="400" height="400" style="display:none;"></canvas>
-<link rel="icon" href="favicon.ico" type="image/x-icon">
 
 <script>
 
-// 🌐 Language
+let currentLang = "ta";
+
 function setLanguage(lang){
+currentLang = lang;
+
 document.getElementById("title").innerText =
 lang==="en" ? "Pledge of 100% Voting" : "100% வாக்களிப்பு உறுதி";
+
+document.getElementById("lblName").innerText =
+lang==="en" ? "Name" : "பெயர்";
+
+document.getElementById("lblPhone").innerText =
+lang==="en" ? "Phone" : "தொலைபேசி";
 }
 
-// 📱 Phone validation
-function validatePhone(phone){
-return /^[6-9][0-9]{9}$/.test(phone);
-}
-
-phone.oninput = function(){
-this.value = this.value.replace(/[^0-9]/g,'');
-}
-
-// 📸 Preview
-uploadInput.onchange = previewImage;
-cameraInput.onchange = previewImage;
-
-function previewImage(e){
-let file = e.target.files[0];
-if(!file) return;
+// preview
+file.onchange = e=>{
 let reader = new FileReader();
-reader.onload = () => preview.src = reader.result;
-reader.readAsDataURL(file);
-}
-
-function getFile(){
-return uploadInput.files[0] || cameraInput.files[0];
-}
-
-
+reader.onload = ()=> preview.src = reader.result;
+reader.readAsDataURL(e.target.files[0]);
+};
 
 function submitForm(){
 
-let phone = document.getElementById("phone").value.trim();
+let name = document.getElementById("name").value;
+let phone = document.getElementById("phone").value;
+let constituency = document.getElementById("constituency").value;
+let fileInput = document.getElementById("file").files[0];
 
-if(!validatePhone(phone)){
-alert("Valid 10 digit number enter pannunga");
+if(!name || !phone || !fileInput){
+alert("Fill all fields");
 return;
 }
 
-let file = getFile();
-if(!file){
-alert("Upload photo");
-return;
-}
-
-// 🔥 COMPRESS IMAGE
-let img = new Image();
+// compress
 let reader = new FileReader();
+reader.onload = e=>{
 
-reader.onload = e => img.src = e.target.result;
+let base64 = e.target.result.split(",")[1];
 
-img.onload = () => {
-
-let canvas = document.createElement("canvas");
-let ctx = canvas.getContext("2d");
-
-let maxWidth = 300;
-let scale = maxWidth / img.width;
-
-canvas.width = maxWidth;
-canvas.height = img.height * scale;
-
-ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-// 👉 compressed base64
-let compressed = canvas.toDataURL("image/jpeg", 0.5).split(",")[1];
-
-// 🚀 SEND DATA
-fetch("https://script.google.com/macros/s/AKfycbyq4Kagc6xf6QAxHpdMebh9yS5ELgZMpPo6HAkEur2BNpRdEtLGh_z9r0_QhV1CGNk/exec", {
-  method: "POST",
-  mode: "no-cors",   // 🔥 important
-  body: new URLSearchParams({
-    name: name.value,
-    phone: phone,
-    district: "Ramanathapuram",
-    constituency: constituency.value,
-    photo: compressed
-  })
+// send to sheet
+fetch("YOUR_GOOGLE_SCRIPT_URL", {
+method:"POST",
+body: new URLSearchParams({
+name:name,
+phone:phone,
+constituency:constituency,
+photo:base64
 })
-.then(() => {
-  // ✅ direct success (no-cors la response read panna mudiyathu)
-  generateBadge(file);
-})
-.catch(() => {
-  alert("Network error ❌");
 });
 
-};
+generateBadge(e.target.result);
 
-reader.readAsDataURL(file);
+};
+reader.readAsDataURL(fileInput);
 }
 
-// 🎫 Badge
-function generateBadge(file){
+function generateBadge(imgData){
 
 let canvas = document.getElementById("canvas");
 let ctx = canvas.getContext("2d");
 
 let bg = new Image();
 let user = new Image();
-let qr = new Image();
 
-bg.src="https://github.com/CMFC2026/pledge100-vote2026V1/blob/main/images/badge.png";
-user.src=URL.createObjectURL(file);
-qr.src="https://github.com/CMFC2026/pledge100-vote2026V1/blob/main/images/qr.png";
+bg.src="https://raw.githubusercontent.com/CMFC2026/pledge100-vote2026V1/main/images/badge.png";
+user.src=imgData;
 
 Promise.all([
 new Promise(r=>bg.onload=r),
-new Promise(r=>user.onload=r),
-new Promise(r=>qr.onload=r)
+new Promise(r=>user.onload=r)
 ]).then(()=>{
 
 ctx.drawImage(bg,0,0,400,400);
 
+// circle photo
 ctx.save();
 ctx.beginPath();
-ctx.arc(200,200,65,0,Math.PI*2);
+ctx.arc(200,200,70,0,Math.PI*2);
 ctx.clip();
-ctx.drawImage(user,135,135,130,130);
+ctx.drawImage(user,130,130,140,140);
 ctx.restore();
 
+// text
+ctx.fillStyle="black";
 ctx.textAlign="center";
-ctx.fillText(name.value,200,300);
-ctx.fillText(constituency.value,200,320);
-ctx.fillText("Ramanathapuram District",200,340);
+ctx.font="bold 16px Arial";
 
-ctx.drawImage(qr,290,290,90,90);
-
-downloadPDF(canvas);
+ctx.fillText(document.getElementById("name").value,200,300);
+ctx.fillText(document.getElementById("constituency").value,200,320);
 
 });
-
 }
 
-// 📄 PDF
-function downloadPDF(canvas){
-
-const { jsPDF } = window.jspdf;
-
-let pdf = new jsPDF({unit:"mm",format:[100,100]});
-pdf.addImage(canvas.toDataURL(),'PNG',0,0,100,100);
-pdf.save("badge.pdf");
-
+function downloadImage(){
+let canvas = document.getElementById("canvas");
+let link = document.createElement("a");
+link.download = "badge.png";
+link.href = canvas.toDataURL();
+link.click();
 }
 
 </script>
