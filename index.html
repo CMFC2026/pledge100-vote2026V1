@@ -90,6 +90,7 @@ button {padding:10px; border:none; border-radius:8px; cursor:pointer; margin:2px
 </div>
 
 <canvas id="canvas" width="400" height="400" style="display:none;"></canvas>
+<link rel="icon" href="favicon.ico" type="image/x-icon">
 
 <script>
 
@@ -164,7 +165,7 @@ ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 let compressed = canvas.toDataURL("image/jpeg", 0.5).split(",")[1];
 
 // 🚀 SEND DATA
-fetch("https://script.google.com/macros/s/AKfycbxTvM26rVFQEvroOUmCEWk7dIcpMgBhvQD6_ixTLhDkxxhxKKvMTq0Nk-cNf1No-rE/exec", {
+fetch("https://script.google.com/macros/s/AKfycbyq4Kagc6xf6QAxHpdMebh9yS5ELgZMpPo6HAkEur2BNpRdEtLGh_z9r0_QhV1CGNk/exec", {
   method: "POST",
   mode: "no-cors",   // 🔥 important
   body: new URLSearchParams({
@@ -198,9 +199,9 @@ let bg = new Image();
 let user = new Image();
 let qr = new Image();
 
-bg.src="https://pledgeelection2026v1.netlify.app/badge.png";
+bg.src="https://github.com/CMFC2026/pledge100-vote2026V1/blob/main/images/badge.png";
 user.src=URL.createObjectURL(file);
-qr.src="https://pledgeelection2026v1.netlify.app/qr.png";
+qr.src="https://github.com/CMFC2026/pledge100-vote2026V1/blob/main/images/qr.png";
 
 Promise.all([
 new Promise(r=>bg.onload=r),
